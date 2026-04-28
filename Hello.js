@@ -1,0 +1,1 @@
+alert('EGIS HELLO WORLD — AutoCAD WEBLOAD fonctionne !');
