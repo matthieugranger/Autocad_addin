@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Egis — Outils AutoCAD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@100;400;700;800&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+  <style>
+    /* ─────────────────────────────────────────
+       Egis Design System — CSS Variables
+    ───────────────────────────────────────── */
+    :root {
+      --egis-bleu-nuit:    #08212C;
+      --egis-vert:         #ABC022;
+      --egis-bleu-azur:    #0099A5;
+      --egis-gris-bleu:    #5D848A;
+      --egis-bleu-canard:  #00617E;
+      --egis-gris-acier:   #97B8BB;
+      --egis-bleu-moyen:   #75A0D2;
+      --egis-rouge-coral:  #FA5D5D;
+      --egis-orange:       #F75226;
+      --egis-jaune-gold:   #FDC603;
+
+      --font-title: 'Urbanist', 'Segoe UI', sans-serif;
+      --font-body:  'EB Garamond', 'Georgia', serif;
+
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --shadow-card: 0 2px 8px rgba(8,33,44,0.12);
+    }
+
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 14px;
+      background: #F4F7F8;
+      color: var(--egis-bleu-nuit);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── Header ─── */
+    .palette-header {
+      background: var(--egis-bleu-nuit);
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 3px solid var(--egis-vert);
+    }
+    .palette-header .logo-text {
+      font-family: var(--font-title);
+      font-weight: 800;
+      font-size: 18px;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+    .palette-header .logo-dot {
+      color: var(--egis-vert);
+    }
+    .palette-header .subtitle {
+      font-family: var(--font-title);
+      font-weight: 400;
+      font-size: 11px;
+      color: var(--egis-gris-acier);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* ─── Main Content ─── */
+    .palette-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ─── Section Cards ─── */
+    .section-card {
+      background: #fff;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+    .section-header {
+      background: var(--egis-bleu-azur);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-header .material-icons {
+      color: #fff;
+      font-size: 18px;
+    }
+    .section-header h2 {
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 13px;
+      color: #fff;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .section-body {
+      padding: 14px;
+    }
+    .section-desc {
+      font-size: 13px;
+      color: var(--egis-gris-bleu);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    /* ─── Form Controls ─── */
+    .form-group {
+      margin-bottom: 10px;
+    }
+    .form-group label {
+      display: block;
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 11px;
+      color: var(--egis-gris-bleu);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"] {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1.5px solid var(--egis-gris-acier);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-title);
+      font-size: 13px;
+      color: var(--egis-bleu-nuit);
+      background: #fafbfc;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .form-group input:focus {
+      border-color: var(--egis-bleu-azur);
+      background: #fff;
+    }
+
+    /* ─── Buttons ─── */
+    .btn {
+      width: 100%;
+      padding: 9px 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+      letter-spacing: 0.3px;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn .material-icons { font-size: 17px; }
+
+    .btn-primary {
+      background: var(--egis-bleu-azur);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--egis-bleu-canard);
+      box-shadow: 0 3px 10px rgba(0,153,165,0.35);
+    }
+
+    .btn-secondary {
+      background: var(--egis-vert);
+      color: var(--egis-bleu-nuit);
+    }
+    .btn-secondary:hover {
+      background: #c8de28;
+      box-shadow: 0 3px 10px rgba(171,192,34,0.35);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ─── Status / Log ─── */
+    .status-area {
+      margin-top: 10px;
+      min-height: 32px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-title);
+      font-size: 12px;
+      line-height: 1.5;
+      display: none;
+    }
+    .status-area.visible { display: block; }
+    .status-area.info {
+      background: #E8F6F7;
+      color: var(--egis-bleu-canard);
+      border-left: 3px solid var(--egis-bleu-azur);
+    }
+    .status-area.success {
+      background: #F0F6D8;
+      color: #5a6e00;
+      border-left: 3px solid var(--egis-vert);
+    }
+    .status-area.error {
+      background: #FFF0EE;
+      color: #b33300;
+      border-left: 3px solid var(--egis-orange);
+    }
+    .status-area.warning {
+      background: #FFF8E0;
+      color: #7a5a00;
+      border-left: 3px solid var(--egis-jaune-gold);
+    }
+
+    /* ─── Progress spinner ─── */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Divider ─── */
+    .divider {
+      height: 1px;
+      background: #F4F7F8;
+      margin: 10px 0;
+    }
+
+    /* ─── Footer ─── */
+    .palette-footer {
+      text-align: center;
+      padding: 10px 16px 14px;
+      font-family: var(--font-title);
+      font-size: 10px;
+      color: var(--egis-gris-acier);
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════ HEADER ══════════ -->
+  <header class="palette-header">
+    <div>
+      <div class="logo-text">egis<span class="logo-dot">.</span></div>
+      <div class="subtitle">AutoCAD Tools 2026</div>
+    </div>
+  </header>
+
+  <!-- ══════════ BODY ══════════ -->
+  <main class="palette-body">
+
+    <!-- ── Section 1 : Cotation ── -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="material-icons">straighten</span>
+        <h2>Cotation automatique</h2>
+      </div>
+      <div class="section-body">
+        <p class="section-desc">
+          Sélectionner une polyligne pour générer automatiquement une cote alignée sur chaque segment.
+        </p>
+        <button class="btn btn-primary" id="btnCotation">
+          <span class="material-icons">architecture</span>
+          Lancer la cotation
+        </button>
+        <div class="status-area" id="statusCotation"></div>
+      </div>
+    </div>
+
+    <!-- ── Section 2 : Numérotation ── -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="material-icons">format_list_numbered</span>
+        <h2>Numérotation de blocs</h2>
+      </div>
+      <div class="section-body">
+        <p class="section-desc">
+          Sélectionner plusieurs blocs pour incrémenter automatiquement la valeur d'un attribut.
+        </p>
+
+        <div class="form-group">
+          <label>Nom de l'attribut (Tag)</label>
+          <input type="text" id="inputTag" placeholder="ex : ID" value="ID" />
+        </div>
+        <div class="form-group">
+          <label>Valeur initiale</label>
+          <input type="number" id="inputStart" placeholder="ex : 1" value="1" min="1" />
+        </div>
+        <div class="form-group">
+          <label>Préfixe</label>
+          <input type="text" id="inputPrefix" placeholder="ex : LOT-" value="LOT-" />
+        </div>
+
+        <div class="divider"></div>
+
+        <button class="btn btn-secondary" id="btnNumerotation">
+          <span class="material-icons">tag</span>
+          Lancer la numérotation
+        </button>
+        <div class="status-area" id="statusNumerotation"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="palette-footer">© Egis — AutoCAD Web SDK 2026</footer>
+
+
+  <!-- ══════════ JAVASCRIPT ══════════ -->
+  <script>
+    /* ─────────────────────────────────────────
+       UTILITAIRES
+    ───────────────────────────────────────── */
+
+    /**
+     * Affiche un message dans une zone de statut.
+     * @param {string} id    - ID de l'élément .status-area
+     * @param {string} msg   - Message à afficher
+     * @param {'info'|'success'|'error'|'warning'} type
+     */
+    function showStatus(id, msg, type = 'info') {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = `status-area visible ${type}`;
+    }
+
+    /** Masque la zone de statut */
+    function clearStatus(id) {
+      const el = document.getElementById(id);
+      el.className = 'status-area';
+    }
+
+    /** Active ou désactive un bouton avec un spinner */
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (loading) {
+        btn._originalHTML = btn.innerHTML;
+        btn.innerHTML = `<span class="spinner"></span> Traitement…`;
+        btn.disabled = true;
+      } else {
+        btn.innerHTML = btn._originalHTML || btn.innerHTML;
+        btn.disabled = false;
+      }
+    }
+
+    /* ─────────────────────────────────────────
+       FONCTION 1 — COTATION AUTOMATIQUE
+    ───────────────────────────────────────── */
+
+    document.getElementById('btnCotation').addEventListener('click', runCotation);
+
+    async function runCotation() {
+      const btnId = 'btnCotation';
+      const statusId = 'statusCotation';
+
+      setLoading(btnId, true);
+      clearStatus(statusId);
+
+      try {
+        // ── Étape 1 : Sélection de la polyligne ──
+        showStatus(statusId, '⟳ Sélectionnez une polyligne dans le dessin…', 'info');
+
+        const selResult = await Acad.Editor.getEntity({
+          message: '\nSélectionnez une polyligne : ',
+          filter: [{ dxf0: 'LWPOLYLINE' }]  // Filtre sur les polylignes légères
+        });
+
+        if (!selResult || selResult.status !== Acad.PromptStatus.OK) {
+          showStatus(statusId, '✕ Sélection annulée ou invalide.', 'warning');
+          return;
+        }
+
+        const entityId = selResult.objectId;
+
+        // ── Étape 2 : Lecture des sommets ──
+        showStatus(statusId, '⟳ Lecture des sommets…', 'info');
+
+        const db = await Acad.Core.Document.getActiveDocument();
+        const entity = await db.getObject(entityId);
+
+        // Récupérer les sommets via les propriétés de la polyligne
+        const vertices = await entity.getVertices();
+
+        if (!vertices || vertices.length < 2) {
+          showStatus(statusId, '✕ La polyligne doit avoir au moins 2 sommets.', 'error');
+          return;
+        }
+
+        // ── Étape 3 : Création des cotes alignées ──
+        let cotationsCreees = 0;
+        const modelSpace = await db.getModelSpace(true); // true = ouverture en écriture
+
+        for (let i = 0; i < vertices.length - 1; i++) {
+          const ptStart = vertices[i];
+          const ptEnd   = vertices[i + 1];
+
+          // Point de la ligne de cote (décalé perpendiculairement)
+          const dimLinePoint = calculerPointDimension(ptStart, ptEnd, 1.5);
+
+          // Création d'une cote alignée
+          const alignedDim = new Acad.DatabaseServices.AlignedDimension();
+          alignedDim.xLine1Point  = ptStart;
+          alignedDim.xLine2Point  = ptEnd;
+          alignedDim.dimLinePoint = dimLinePoint;
+
+          // Style de cote courant
+          alignedDim.dimensionStyle = await db.dimStyle;
+
+          await modelSpace.appendEntity(alignedDim);
+          alignedDim.dispose();
+          cotationsCreees++;
+        }
+
+        // Fermer l'espace modèle et régénérer
+        await db.regenerate();
+
+        showStatus(
+          statusId,
+          `✓ ${cotationsCreees} cote(s) créée(s) sur ${vertices.length - 1} segment(s).`,
+          'success'
+        );
+
+      } catch (err) {
+        // Gestion des erreurs
+        const msg = err && err.message ? err.message : String(err);
+        if (msg.toLowerCase().includes('cancel') || msg.toLowerCase().includes('annul')) {
+          showStatus(statusId, '⚠ Opération annulée par l\'utilisateur.', 'warning');
+        } else {
+          showStatus(statusId, `✕ Erreur : ${msg}`, 'error');
+          console.error('[Cotation] Erreur :', err);
+        }
+      } finally {
+        setLoading(btnId, false);
+      }
+    }
+
+    /**
+     * Calcule un point décalé perpendiculairement au segment,
+     * utilisé pour positionner la ligne de cote.
+     * @param {{x,y,z}} p1  Point de départ du segment
+     * @param {{x,y,z}} p2  Point de fin du segment
+     * @param {number}  offset  Distance de décalage
+     * @returns {{x,y,z}}
+     */
+    function calculerPointDimension(p1, p2, offset) {
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+
+      // Vecteur perpendiculaire unitaire
+      const perpX = -dy / len;
+      const perpY =  dx / len;
+
+      // Point milieu + offset perpendiculaire
+      const mx = (p1.x + p2.x) / 2 + perpX * offset;
+      const my = (p1.y + p2.y) / 2 + perpY * offset;
+
+      return { x: mx, y: my, z: p1.z || 0 };
+    }
+
+
+    /* ─────────────────────────────────────────
+       FONCTION 2 — NUMÉROTATION DE BLOCS
+    ───────────────────────────────────────── */
+
+    document.getElementById('btnNumerotation').addEventListener('click', runNumerotation);
+
+    async function runNumerotation() {
+      const btnId    = 'btnNumerotation';
+      const statusId = 'statusNumerotation';
+
+      // ── Lecture des paramètres UI ──
+      const tag    = document.getElementById('inputTag').value.trim().toUpperCase();
+      const start  = parseInt(document.getElementById('inputStart').value, 10);
+      const prefix = document.getElementById('inputPrefix').value;
+
+      // ── Validation ──
+      if (!tag) {
+        showStatus(statusId, '⚠ Veuillez saisir un nom d\'attribut (Tag).', 'warning');
+        return;
+      }
+      if (isNaN(start) || start < 0) {
+        showStatus(statusId, '⚠ La valeur initiale doit être un entier positif.', 'warning');
+        return;
+      }
+
+      setLoading(btnId, true);
+      clearStatus(statusId);
+
+      try {
+        // ── Étape 1 : Sélection multiple de blocs ──
+        showStatus(statusId, '⟳ Sélectionnez les blocs à numéroter…', 'info');
+
+        const selResult = await Acad.Editor.getSelection({
+          message: '\nSélectionnez les blocs à numéroter (ENTRÉE pour terminer) : ',
+          filter: [{ dxf0: 'INSERT' }]  // Filtre sur les références de blocs
+        });
+
+        if (!selResult || selResult.status !== Acad.PromptStatus.OK) {
+          showStatus(statusId, '⚠ Sélection annulée ou vide.', 'warning');
+          return;
+        }
+
+        const objectIds = selResult.objectIds;
+        if (!objectIds || objectIds.length === 0) {
+          showStatus(statusId, '⚠ Aucun bloc sélectionné.', 'warning');
+          return;
+        }
+
+        // ── Étape 2 : Traitement de chaque bloc ──
+        showStatus(statusId, `⟳ Traitement de ${objectIds.length} bloc(s)…`, 'info');
+
+        const db = await Acad.Core.Document.getActiveDocument();
+        let compteurMaj   = 0;
+        let compteurNoTag = 0;
+        let index = start;
+
+        for (const objId of objectIds) {
+          const blkRef = await db.getObject(objId, Acad.OpenMode.forWrite);
+
+          // Vérifier que c'est bien une référence de bloc avec attributs
+          if (!blkRef || typeof blkRef.getAttributes !== 'function') {
+            blkRef && blkRef.dispose && blkRef.dispose();
+            continue;
+          }
+
+          const attrRefs = await blkRef.getAttributes();
+          let attributTrouve = false;
+
+          for (const attrRef of attrRefs) {
+            const tagCourant = (await attrRef.tag).toUpperCase();
+
+            if (tagCourant === tag) {
+              // ── Formatage : 01, 02 … 09, 10, 11 …
+              const valeur = `${prefix}${formaterIndex(index)}`;
+              await attrRef.setTextString(valeur);
+              attributTrouve = true;
+              compteurMaj++;
+              index++;
+              break; // Un seul attribut par bloc pour ce tag
+            }
+          }
+
+          // Libérer les références d'attributs
+          for (const attrRef of attrRefs) attrRef.dispose && attrRef.dispose();
+
+          if (!attributTrouve) compteurNoTag++;
+          blkRef.dispose && blkRef.dispose();
+        }
+
+        // Régénérer le dessin pour afficher les mises à jour
+        await db.regenerate();
+
+        // ── Rapport final ──
+        let msg = `✓ ${compteurMaj} attribut(s) mis à jour.`;
+        if (compteurNoTag > 0)
+          msg += ` ⚠ ${compteurNoTag} bloc(s) sans l'attribut « ${tag} ».`;
+
+        showStatus(statusId, msg, compteurMaj > 0 ? 'success' : 'warning');
+
+      } catch (err) {
+        const msg = err && err.message ? err.message : String(err);
+        if (msg.toLowerCase().includes('cancel') || msg.toLowerCase().includes('annul')) {
+          showStatus(statusId, '⚠ Opération annulée par l\'utilisateur.', 'warning');
+        } else {
+          showStatus(statusId, `✕ Erreur : ${msg}`, 'error');
+          console.error('[Numérotation] Erreur :', err);
+        }
+      } finally {
+        setLoading(btnId, false);
+      }
+    }
+
+    /**
+     * Formate un index numérique avec zéro devant si < 10.
+     * @param {number} n
+     * @returns {string}  ex: 1 → "01", 10 → "10"
+     */
+    function formaterIndex(n) {
+      return n < 10 ? `0${n}` : `${n}`;
+    }
+
+  </script>
+</body>
+</html>
