@@ -332,6 +332,35 @@
   <!-- ══════════ JAVASCRIPT ══════════ -->
   <script>
     /* ─────────────────────────────────────────
+       INITIALISATION WEB SDK
+    ───────────────────────────────────────── */
+    
+    // Attendre que le Web SDK soit disponible
+    let sdkReady = false;
+    
+    async function initializeSDK() {
+      // Attendre la disponibilité de Acad (injécté par AutoCAD WEBLOAD)
+      let maxAttempts = 50;
+      while (!window.Acad && maxAttempts > 0) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        maxAttempts--;
+      }
+      
+      if (!window.Acad) {
+        console.error('AutoCAD Web SDK non disponible. Vérifiez le chargement via WEBLOAD.');
+        showStatus('statusCotation', '✕ SDK AutoCAD non détecté. Rechargez la palette.', 'error');
+        return false;
+      }
+      
+      sdkReady = true;
+      console.log('✓ AutoCAD Web SDK initialisé');
+      return true;
+    }
+    
+    // Initialiser au chargement
+    document.addEventListener('DOMContentLoaded', initializeSDK);
+
+    /* ─────────────────────────────────────────
        UTILITAIRES
     ───────────────────────────────────────── */
 
@@ -376,6 +405,12 @@
       const btnId = 'btnCotation';
       const statusId = 'statusCotation';
 
+      // Vérifier que le SDK est initialisé
+      if (!sdkReady) {
+        showStatus(statusId, '✕ AutoCAD Web SDK non disponible.', 'error');
+        return;
+      }
+
       setLoading(btnId, true);
       clearStatus(statusId);
 
@@ -383,12 +418,11 @@
         // ── Étape 1 : Sélection de la polyligne ──
         showStatus(statusId, '⟳ Sélectionnez une polyligne dans le dessin…', 'info');
 
-        const selResult = await Acad.Editor.getEntity({
-          message: '\nSélectionnez une polyligne : ',
-          filter: [{ dxf0: 'LWPOLYLINE' }]  // Filtre sur les polylignes légères
+        const selResult = await window.Acad.Editor.getEntity({
+          message: '\nSélectionnez une polyligne : '
         });
 
-        if (!selResult || selResult.status !== Acad.PromptStatus.OK) {
+        if (!selResult || selResult.status !== window.Acad.PromptStatus.OK) {
           showStatus(statusId, '✕ Sélection annulée ou invalide.', 'warning');
           return;
         }
@@ -398,11 +432,24 @@
         // ── Étape 2 : Lecture des sommets ──
         showStatus(statusId, '⟳ Lecture des sommets…', 'info');
 
-        const db = await Acad.Core.Document.getActiveDocument();
+        const db = await window.Acad.Core.Document.getActiveDocument();
         const entity = await db.getObject(entityId);
 
-        // Récupérer les sommets via les propriétés de la polyligne
-        const vertices = await entity.getVertices();
+        // Vérifier que c'est une polyligne
+        const objectType = await entity.objectName;
+        if (!objectType || !objectType.includes('POLYLINE')) {
+          showStatus(statusId, '✕ L\'entité sélectionnée n\'est pas une polyligne.', 'error');
+          return;
+        }
+
+        // Récupérer les sommets
+        const vertices = [];
+        let vertexCount = await entity.numberOfVertices;
+        
+        for (let i = 0; i < vertexCount; i++) {
+          const pt = await entity.getPointAt(i);
+          vertices.push(pt);
+        }
 
         if (!vertices || vertices.length < 2) {
           showStatus(statusId, '✕ La polyligne doit avoir au moins 2 sommets.', 'error');
@@ -421,13 +468,14 @@
           const dimLinePoint = calculerPointDimension(ptStart, ptEnd, 1.5);
 
           // Création d'une cote alignée
-          const alignedDim = new Acad.DatabaseServices.AlignedDimension();
+          const alignedDim = new window.Acad.DatabaseServices.AlignedDimension();
           alignedDim.xLine1Point  = ptStart;
           alignedDim.xLine2Point  = ptEnd;
           alignedDim.dimLinePoint = dimLinePoint;
 
-          // Style de cote courant
-          alignedDim.dimensionStyle = await db.dimStyle;
+          // Appliquer le style courant
+          const dimStyle = await db.getCurrentDimensionStyle();
+          if (dimStyle) alignedDim.dimensionStyleId = dimStyle;
 
           await modelSpace.appendEntity(alignedDim);
           alignedDim.dispose();
@@ -435,7 +483,8 @@
         }
 
         // Fermer l'espace modèle et régénérer
-        await db.regenerate();
+        await modelSpace.close();
+        await db.regen(window.Acad.RegenType.activeViewport);
 
         showStatus(
           statusId,
@@ -492,6 +541,12 @@
       const btnId    = 'btnNumerotation';
       const statusId = 'statusNumerotation';
 
+      // Vérifier que le SDK est initialisé
+      if (!sdkReady) {
+        showStatus(statusId, '✕ AutoCAD Web SDK non disponible.', 'error');
+        return;
+      }
+
       // ── Lecture des paramètres UI ──
       const tag    = document.getElementById('inputTag').value.trim().toUpperCase();
       const start  = parseInt(document.getElementById('inputStart').value, 10);
@@ -514,12 +569,11 @@
         // ── Étape 1 : Sélection multiple de blocs ──
         showStatus(statusId, '⟳ Sélectionnez les blocs à numéroter…', 'info');
 
-        const selResult = await Acad.Editor.getSelection({
-          message: '\nSélectionnez les blocs à numéroter (ENTRÉE pour terminer) : ',
-          filter: [{ dxf0: 'INSERT' }]  // Filtre sur les références de blocs
+        const selResult = await window.Acad.Editor.getSelection({
+          message: '\nSélectionnez les blocs à numéroter (ENTRÉE pour terminer) : '
         });
 
-        if (!selResult || selResult.status !== Acad.PromptStatus.OK) {
+        if (!selResult || selResult.status !== window.Acad.PromptStatus.OK) {
           showStatus(statusId, '⚠ Sélection annulée ou vide.', 'warning');
           return;
         }
@@ -533,46 +587,50 @@
         // ── Étape 2 : Traitement de chaque bloc ──
         showStatus(statusId, `⟳ Traitement de ${objectIds.length} bloc(s)…`, 'info');
 
-        const db = await Acad.Core.Document.getActiveDocument();
+        const db = await window.Acad.Core.Document.getActiveDocument();
         let compteurMaj   = 0;
         let compteurNoTag = 0;
         let index = start;
 
         for (const objId of objectIds) {
-          const blkRef = await db.getObject(objId, Acad.OpenMode.forWrite);
+          const blkRef = await db.getObject(objId, window.Acad.OpenMode.forWrite);
 
-          // Vérifier que c'est bien une référence de bloc avec attributs
-          if (!blkRef || typeof blkRef.getAttributes !== 'function') {
+          // Vérifier que c'est une référence de bloc (INSERT)
+          const objectType = await blkRef.objectName;
+          if (!objectType || !objectType.includes('INSERT')) {
             blkRef && blkRef.dispose && blkRef.dispose();
             continue;
           }
 
-          const attrRefs = await blkRef.getAttributes();
+          // Récupérer les IDs d'attributs du bloc
+          const attrIds = await blkRef.attributeIds;
           let attributTrouve = false;
 
-          for (const attrRef of attrRefs) {
-            const tagCourant = (await attrRef.tag).toUpperCase();
+          if (attrIds && attrIds.length > 0) {
+            for (const attrId of attrIds) {
+              const attrRef = await db.getObject(attrId, window.Acad.OpenMode.forWrite);
+              const tagCourant = (await attrRef.tag).toUpperCase();
 
-            if (tagCourant === tag) {
-              // ── Formatage : 01, 02 … 09, 10, 11 …
-              const valeur = `${prefix}${formaterIndex(index)}`;
-              await attrRef.setTextString(valeur);
-              attributTrouve = true;
-              compteurMaj++;
-              index++;
-              break; // Un seul attribut par bloc pour ce tag
+              if (tagCourant === tag) {
+                // ── Formatage : 01, 02 … 09, 10, 11 …
+                const valeur = `${prefix}${formaterIndex(index)}`;
+                await attrRef.setTextString(valeur);
+                attributTrouve = true;
+                compteurMaj++;
+                index++;
+                attrRef.dispose && attrRef.dispose();
+                break; // Un seul attribut par bloc pour ce tag
+              }
+              attrRef.dispose && attrRef.dispose();
             }
           }
-
-          // Libérer les références d'attributs
-          for (const attrRef of attrRefs) attrRef.dispose && attrRef.dispose();
 
           if (!attributTrouve) compteurNoTag++;
           blkRef.dispose && blkRef.dispose();
         }
 
         // Régénérer le dessin pour afficher les mises à jour
-        await db.regenerate();
+        await db.regen(window.Acad.RegenType.activeViewport);
 
         // ── Rapport final ──
         let msg = `✓ ${compteurMaj} attribut(s) mis à jour.`;
