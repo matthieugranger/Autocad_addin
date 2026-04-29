@@ -1,47 +1,41 @@
-/**
- * Egis AutoCAD Palette Loader - Version Corrigée 2026
- * Utilisation : WEBLOAD "https://matthieugranger.github.io/Autocad_addin/egis_autocad_palette.js"
- */
-
+// EGIS - FIX FINAL 2026
 (function() {
-  'use strict';
-
-  // URL directe de votre fichier HTML hébergé
-  const PALETTE_URL = 'https://matthieugranger.github.io/Autocad_addin/egis_autocad_palette.html';
-  const PALETTE_ID = 'egis-autocad-tools-palette';
-
-  async function initPalette() {
-    try {
-      // 1. Attendre que l'API Acad soit chargée
-      if (typeof Acad === 'undefined') {
-        let attempts = 0;
-        while (typeof Acad === 'undefined' && attempts < 20) {
-          await new Promise(r => setTimeout(r, 200));
-          attempts++;
+    async function forceRender() {
+        // Attendre que l'objet Acad soit totalement stabilisé
+        if (typeof Acad === 'undefined') {
+            await new Promise(r => setTimeout(r, 2000));
         }
-      }
 
-      if (typeof Acad === 'undefined') {
-        console.error('❌ SDK AutoCAD introuvable');
-        return;
-      }
+        const id = "EGIS_ULTRA_FIX";
+        
+        // On définit le HTML de manière ultra-standard
+        const htmlContent = `<!DOCTYPE html><html><body style="background:#08212C;color:white;padding:20px;font-family:sans-serif;">
+            <h1 style="color:#ABC022">Egis Operationnel</h1>
+            <p>Si vous voyez ceci, le rendu fonctionne enfin.</p>
+            <button onclick="alert('Lien OK')" style="padding:10px;width:100%">Tester</button>
+            </body></html>`;
 
-      // 2. Nettoyage si la palette existe déjà
-      try {
-        await Acad.Application.removePalette(PALETTE_ID);
-      } catch (e) { /* ignored */ }
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
 
-      // 3. Création de la palette
-      // On utilise addPalette avec l'URL directe de GitHub
-      await Acad.Application.addPalette(PALETTE_ID, 'Egis — Outils 2026', PALETTE_URL);
-      
-      console.log('✓ Palette Egis chargée depuis GitHub');
-      Acad.Editor.writeMessage('\n[Egis] Palette chargée avec succès.\n');
+        try {
+            // Nettoyage radical
+            try { await Acad.Application.removePalette(id); } catch(e) {}
+            
+            // Création de la palette
+            const palette = new Acad.UI.Palette(id, url);
+            palette.title = "Egis Tools";
+            palette.width = 300;
+            palette.visible = true;
 
-    } catch (err) {
-      console.error('❌ Erreur:', err.message);
+            // Commande pour forcer la mise à jour de l'affichage
+            Acad.Editor.executeCommand("_.REDRAW");
+            console.log("Palette Egis chargée");
+        } catch (err) {
+            console.error(err);
+        }
     }
-  }
 
-  initPalette();
+    // On lance avec un délai supplémentaire pour laisser le moteur respirer
+    setTimeout(forceRender, 500);
 })();
